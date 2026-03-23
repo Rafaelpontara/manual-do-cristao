@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/bible_models.dart';
+import '../services/reading_plan_service.dart';
 import '../theme/app_theme.dart';
 import 'chapters_screen.dart';
 import 'chapter_reader_screen.dart';
@@ -37,16 +40,24 @@ class _ReadScreenState extends State<ReadScreen>
     return Scaffold(
       backgroundColor: isDark ? AppTheme.navyDeep : AppTheme.creamLight,
       appBar: AppBar(
-        title: Text('Leitura', style: Theme.of(context).textTheme.headlineLarge),
+        backgroundColor: isDark ? AppTheme.navyDeep : AppTheme.creamLight,
+        elevation: 0,
+        title: Text('Leitura', style: TextStyle(
+          color: AppTheme.goldPrimary,
+          fontSize: 22, fontWeight: FontWeight.w800,
+          letterSpacing: -0.3,
+        )),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppTheme.goldPrimary,
           unselectedLabelColor: AppTheme.warmGray,
           indicatorColor: AppTheme.goldPrimary,
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
           tabs: const [
             Tab(text: 'Plano'),
             Tab(text: 'Cronológica'),
-            Tab(text: 'Videos'),
+            Tab(text: 'Vídeos'),
           ],
         ),
       ),
@@ -82,13 +93,13 @@ class _ReadScreenState extends State<ReadScreen>
               const SizedBox(height: 24),
               Text(
                 'Nenhum Plano Ativo',
-                style: Theme.of(context).textTheme.displaySmall,
+                style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0D1B2A), fontSize: 22, fontWeight: FontWeight.w800),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 'Escolha um plano de leitura e acompanhe seu progresso diário',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: const TextStyle(color: AppTheme.warmGray, fontSize: 14, height: 1.5),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -151,10 +162,6 @@ class _ReadScreenState extends State<ReadScreen>
     }
 
     final plan = provider.activePlan!;
-    final today = plan.dailyReadings.isNotEmpty &&
-            plan.currentDay <= plan.dailyReadings.length
-        ? plan.dailyReadings[plan.currentDay - 1]
-        : null;
 
     return CustomScrollView(
       slivers: [
@@ -220,7 +227,7 @@ class _ReadScreenState extends State<ReadScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Dia ${plan.currentDay} de ${plan.durationDays}',
+                  'Dia ${plan.currentDay} de ${plan.totalDays}',
                   style:
                       const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
@@ -228,127 +235,99 @@ class _ReadScreenState extends State<ReadScreen>
             ),
           ),
         ),
-        if (today != null) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Row(
-                children: [
-                  Text(
-                    'Leitura de Hoje — Dia ${today.day}',
-                    style: Theme.of(context).textTheme.headlineLarge,
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Text('Leitura de Hoje — Dia \${plan.currentDay}',
+                  style: const TextStyle(color: AppTheme.goldPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: () {
+                    provider.markPlanDayComplete(plan.currentDay);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('✅ Dia concluído! Continue assim! 🎉')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.goldPrimary,
+                    foregroundColor: AppTheme.navyDeep,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                   ),
-                  const Spacer(),
-                  if (!today.isCompleted)
-                    ElevatedButton(
-                      onPressed: () {
-                        provider.markPlanDayComplete(today.day);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('✅ Dia concluído! Continue assim!')),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        textStyle: const TextStyle(fontSize: 12),
-                      ),
-                      child: const Text('Concluir'),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.forestGreen.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_circle_rounded,
-                              color: AppTheme.forestGreen, size: 14),
-                          SizedBox(width: 4),
-                          Text('Concluído',
-                              style: TextStyle(
-                                  color: AppTheme.forestGreen,
-                                  fontSize: 12)),
-                        ],
-                      ),
+                  child: const Text('✓ Concluir'),
+                ),
+              ]),
+              const SizedBox(height: 12),
+              // Show today's readings
+              Builder(builder: (ctx) {
+                final todayReading = ReadingPlanService.getTodayReading(plan.schedule, plan.currentDay);
+                if (todayReading == null || (todayReading['readings'] as List).isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.navyMid : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: isDark ? AppTheme.navyLight : const Color(0xFFE8DCC8)),
                     ),
-                ],
-              ),
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) {
-                final cr = today.chapters[i];
-                final book = provider.books
-                    .firstWhere((b) => b.id == cr.bookId,
-                        orElse: () => provider.books.first);
-
-                return Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.navyMid : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: cr.isRead
-                          ? AppTheme.forestGreen.withOpacity(0.4)
-                          : isDark
-                              ? const Color(0xFF2A3F5A)
-                              : const Color(0xFFE8DCC8),
+                    child: const Text('Nenhuma leitura para hoje', style: TextStyle(color: AppTheme.warmGray)),
+                  );
+                }
+                final readings = todayReading['readings'] as List;
+                return Column(children: readings.map<Widget>((r) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.navyMid : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: isDark ? AppTheme.navyLight : const Color(0xFFE8DCC8)),
                     ),
-                  ),
-                  child: ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: cr.isRead
-                            ? AppTheme.forestGreen.withOpacity(0.15)
-                            : AppTheme.goldPrimary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        cr.isRead
-                            ? Icons.check_rounded
-                            : Icons.menu_book_rounded,
-                        color: cr.isRead
-                            ? AppTheme.forestGreen
-                            : AppTheme.goldPrimary,
-                        size: 18,
-                      ),
-                    ),
-                    title: Text(
-                      '${book.name} ${cr.chapter}',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    subtitle: Text(book.category,
-                        style: Theme.of(context).textTheme.bodySmall),
-                    trailing: const Icon(Icons.chevron_right_rounded,
-                        color: AppTheme.warmGray, size: 18),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChapterReaderScreen(
-                            book: book,
-                            chapter: cr.chapter,
-                          ),
+                    child: Row(children: [
+                      Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          color: AppTheme.goldPrimary.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
-              childCount: today.chapters.length,
-            ),
+                        child: const Icon(Icons.menu_book_rounded, color: AppTheme.goldPrimary, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('${r["bookName"]} Cap. ${r["chapter"]}',
+                          style: TextStyle(color: isDark ? Colors.white : AppTheme.navyDeep,
+                            fontWeight: FontWeight.w700, fontSize: 15)),
+                        Text('Capítulo ${r["chapter"]}',
+                          style: const TextStyle(color: AppTheme.warmGray, fontSize: 12)),
+                      ])),
+                      GestureDetector(
+                        onTap: () {
+                          final book = provider.books.firstWhere(
+                            (b) => b.id == r['bookId'],
+                            orElse: () => provider.books.first,
+                          );
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => ChapterReaderScreen(book: book, chapter: r['chapter'] as int),
+                          ));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.goldPrimary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text('Ler', style: TextStyle(color: AppTheme.navyDeep, fontWeight: FontWeight.w700, fontSize: 13)),
+                        ),
+                      ),
+                    ]),
+                  );
+                }).toList());
+              }),
+            ]),
           ),
-        ],
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 80)),
       ],
     );
   }
@@ -417,7 +396,7 @@ class _ReadScreenState extends State<ReadScreen>
                 ),
                 title: Text(
                   book.name,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0D1B2A), fontSize: 15, fontWeight: FontWeight.w600)?.copyWith(
                         fontSize: 14,
                       ),
                 ),
@@ -425,7 +404,7 @@ class _ReadScreenState extends State<ReadScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${book.chapters} capítulos · ${book.category}',
-                        style: Theme.of(context).textTheme.bodySmall),
+                        style: const TextStyle(color: AppTheme.warmGray, fontSize: 12)),
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: book.readingProgress,
@@ -480,140 +459,144 @@ class _ReadScreenState extends State<ReadScreen>
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.headlineLarge,
+        style: const TextStyle(color: AppTheme.goldPrimary, fontSize: 22, fontWeight: FontWeight.w800),
       ),
     );
   }
 
   Widget _buildVideosTab(BuildContext context, bool isDark) {
     final videos = BibleData.getVideoLessons();
+    final ctrl = TextEditingController();
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: videos.length,
-      itemBuilder: (ctx, i) {
-        final video = videos[i];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.navyMid : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? const Color(0xFF2A3F5A)
-                  : const Color(0xFFE8DCC8),
+    void searchYouTube() async {
+      if (ctrl.text.trim().isEmpty) return;
+      final query = Uri.encodeComponent('${ctrl.text.trim()} bíblia pregação');
+      final url = Uri.parse('https://www.youtube.com/results?search_query=$query');
+      if (await canLaunchUrl(url)) launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+
+    return Column(children: [
+      // Barra de busca YouTube
+      Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Row(children: [
+          Expanded(
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A2E45) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? const Color(0xFF2A3F5A) : const Color(0xFFE8DCC8)),
+              ),
+              child: TextField(
+                controller: ctrl,
+                style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0D1B2A), fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Buscar vídeos no YouTube...',
+                  hintStyle: const TextStyle(color: AppTheme.warmGray, fontSize: 13),
+                  prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.warmGray, size: 20),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onSubmitted: (_) => searchYouTube(),
+              ),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Thumbnail
-              Container(
-                height: 160,
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black54,
-                            Colors.black26,
-                          ],
-                        ),
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16)),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.play_arrow_rounded,
-                          color: Colors.white, size: 28),
-                    ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: video.category == 'padre'
-                              ? Colors.purple.withOpacity(0.8)
-                              : Colors.blue.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          video.category == 'padre' ? 'Padre' : 'Pastor',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: searchYouTube,
+            child: Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      video.title,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          video.category == 'padre'
-                              ? Icons.church_rounded
-                              : Icons.groups_rounded,
-                          size: 14,
-                          color: AppTheme.warmGray,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          video.channelName,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const Spacer(),
-                        Text(
-                          video.bookId.toUpperCase(),
-                          style: const TextStyle(
-                            color: AppTheme.goldPrimary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      video.description,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              child: const Icon(Icons.play_circle_filled_rounded, color: Colors.white, size: 24),
+            ),
           ),
-        );
-      },
-    );
+        ]),
+      ),
+      // Lista de vídeos
+      Expanded(
+        child: ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+          itemCount: videos.length,
+          itemBuilder: (ctx, i) {
+            final video = videos[i];
+            final isPadre = video.category == 'padre';
+            return GestureDetector(
+              onTap: () async {
+                final url = Uri.parse('https://www.youtube.com/watch?v=${video.youtubeId}');
+                if (await canLaunchUrl(url)) launchUrl(url, mode: LaunchMode.externalApplication);
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.navyMid : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isDark ? const Color(0xFF2A3F5A) : const Color(0xFFE8DCC8)),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Stack(children: [
+                      Container(
+                        height: 180, width: double.infinity, color: Colors.black87,
+                        child: Image.network(video.thumbnail, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(color: Colors.black87)),
+                      ),
+                      Container(height: 180, decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [Colors.transparent, Colors.black54],
+                          begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                      )),
+                      const Positioned.fill(child: Center(
+                        child: Icon(Icons.play_circle_filled_rounded, color: Colors.red, size: 56),
+                      )),
+                      Positioned(top: 12, right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isPadre ? const Color(0xFF7B2FBE) : const Color(0xFF1565C0),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(isPadre ? 'Padre' : 'Pastor',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ]),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(video.title,
+                        style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0D1B2A),
+                          fontSize: 15, fontWeight: FontWeight.w700),
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 6),
+                      Row(children: [
+                        Icon(isPadre ? Icons.church_rounded : Icons.people_rounded,
+                          size: 13, color: AppTheme.warmGray),
+                        const SizedBox(width: 4),
+                        Expanded(child: Text(video.channelName,
+                          style: const TextStyle(color: AppTheme.warmGray, fontSize: 12),
+                          overflow: TextOverflow.ellipsis)),
+                        Text(video.bookId.toUpperCase(),
+                          style: const TextStyle(color: AppTheme.goldPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ]),
+                      if (video.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(video.description,
+                          style: const TextStyle(color: AppTheme.warmGray, fontSize: 12),
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
+                      ],
+                    ]),
+                  ),
+                ]),
+              ),
+            );
+          },
+        ),
+      ),
+    ]);
   }
 }

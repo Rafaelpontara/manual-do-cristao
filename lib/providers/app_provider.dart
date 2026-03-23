@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:math';
 import '../models/bible_models.dart';
+import '../services/reading_plan_service.dart';
+import '../services/offline_service.dart';
 
 class AppProvider extends ChangeNotifier {
   bool _isDarkMode = true;
@@ -18,11 +20,13 @@ class AppProvider extends ChangeNotifier {
   Map<String, dynamic>? _dailyVerse;
   int _dailyStreak = 0;
   DateTime? _lastReadDate;
+  String _userName = '';
 
   // Getters
   bool get isDarkMode => _isDarkMode;
   Religion get religion => _religion;
   BibleVersion get bibleVersion => _bibleVersion;
+  String get userName => _userName;
   List<BibleBook> get books => _books;
   List<BibleBook> get oldTestamentBooks =>
       _books.where((b) => b.testament == Testament.old).toList();
@@ -45,7 +49,7 @@ class AppProvider extends ChangeNotifier {
   int get totalBooksRead => _books.where((b) => b.isCompleted).length;
 
   AppProvider() {
-    _books = BibleData.getBooks();
+    _books = BibleData.getBooks(religion: _religion);
     _loadDailyVerse();
     _loadFromPrefs();
   }
@@ -61,12 +65,15 @@ class AppProvider extends ChangeNotifier {
     _isDarkMode = prefs.getBool('isDarkMode') ?? true;
     _readingFontSize = prefs.getInt('readingFontSize') ?? 18;
     _dailyStreak = prefs.getInt('dailyStreak') ?? 0;
+    _userName = prefs.getString('userName') ?? '';
 
     final religionIndex = prefs.getInt('religion') ?? 1;
-    _religion = Religion.values[religionIndex];
+    _religion = Religion.values[religionIndex.clamp(0, Religion.values.length - 1)];
 
     final versionIndex = prefs.getInt('bibleVersion') ?? 0;
-    _bibleVersion = BibleVersion.values[versionIndex];
+    _bibleVersion = BibleVersion.values[versionIndex.clamp(0, BibleVersion.values.length - 1)];
+    // Recarrega livros com a religião salva
+    _books = BibleData.getBooks(religion: _religion);
 
     // Load reading progress
     final progressJson = prefs.getString('readingProgress');
@@ -93,6 +100,23 @@ class AppProvider extends ChangeNotifier {
       _highlights = List<Map<String, dynamic>>.from(json.decode(hlJson));
     }
 
+    // Load active reading plan
+    final planJson = prefs.getString('active_plan');
+    if (planJson != null) {
+      try {
+        final p = json.decode(planJson) as Map<String, dynamic>;
+        _activePlan = ReadingPlan(
+          id: p['id'] ?? '',
+          name: p['name'] ?? '',
+          description: p['description'] ?? '',
+          totalDays: p['totalDays'] ?? 365,
+          currentDay: p['currentDay'] ?? 1,
+          schedule: List<Map<String, dynamic>>.from(p['schedule'] ?? []),
+        );
+        _activePlan!.progress = p['progress'] ?? 0.0;
+      } catch (e) {}
+    }
+
     notifyListeners();
   }
 
@@ -104,6 +128,19 @@ class AppProvider extends ChangeNotifier {
     await prefs.setInt('religion', _religion.index);
     await prefs.setInt('bibleVersion', _bibleVersion.index);
 
+    // Save active reading plan
+    if (_activePlan != null) {
+      await prefs.setString('active_plan', json.encode({
+        'id': _activePlan!.id,
+        'name': _activePlan!.name,
+        'description': _activePlan!.description,
+        'totalDays': _activePlan!.totalDays,
+        'currentDay': _activePlan!.currentDay,
+        'progress': _activePlan!.progress,
+        'schedule': _activePlan!.schedule,
+      }));
+    }
+
     final progress = {
       for (final book in _books)
         book.id: {'progress': book.readingProgress, 'chapters': book.completedChapters}
@@ -114,6 +151,13 @@ class AppProvider extends ChangeNotifier {
     await prefs.setString('highlights', json.encode(_highlights));
   }
 
+  Future<void> setUserName(String name) async {
+    _userName = name;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userName', name);
+    notifyListeners();
+  }
+
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     _saveToPrefs();
@@ -122,6 +166,10 @@ class AppProvider extends ChangeNotifier {
 
   void setReligion(Religion religion) {
     _religion = religion;
+    // Muda automaticamente para a versão padrão da religião
+    _bibleVersion = religion.defaultVersion;
+    // Recarrega livros (católica inclui deuterocanônicos)
+    _books = BibleData.getBooks(religion: religion);
     _saveToPrefs();
     notifyListeners();
   }
@@ -248,81 +296,113 @@ class AppProvider extends ChangeNotifier {
 
   void setActivePlan(ReadingPlan plan) {
     _activePlan = plan;
-    _activePlan!.isActive = true;
-    _activePlan!.startDate = DateTime.now();
+    _saveToPrefs();
+    notifyListeners();
+  }
+
+  void cancelActivePlan() {
+    _activePlan = null;
+    SharedPreferences.getInstance().then((p) => p.remove('active_plan'));
     notifyListeners();
   }
 
   void markPlanDayComplete(int day) {
-    if (_activePlan != null && day <= _activePlan!.dailyReadings.length) {
-      _activePlan!.dailyReadings[day - 1].isCompleted = true;
-      _activePlan!.dailyReadings[day - 1].completedAt = DateTime.now();
-      if (day < _activePlan!.durationDays) {
+    if (_activePlan != null && day <= _activePlan!.totalDays) {
+      // Mark day as completed in schedule
+      if (day <= _activePlan!.schedule.length) {
+        _activePlan!.schedule[day - 1]['completed'] = true;
+        _activePlan!.schedule[day - 1]['completedAt'] = DateTime.now().toIso8601String();
+      }
+      if (day < _activePlan!.totalDays) {
         _activePlan!.currentDay = day + 1;
       }
+      _activePlan!.progress = _activePlan!.currentDay / _activePlan!.totalDays;
+
+      // Atualizar streak
+      final now = DateTime.now();
+      if (_lastReadDate == null ||
+          now.difference(_lastReadDate!).inDays >= 1) {
+        _dailyStreak++;
+        _lastReadDate = now;
+      }
+
+      _saveToPrefs();
       notifyListeners();
     }
   }
 
-  ReadingPlan createReadingPlan(String type) {
+  // Leitura de hoje baseada no plano
+  Map<String, dynamic>? get todayReading {
+    if (_activePlan == null) return null;
+    final day = _activePlan!.currentDay;
+    if (_activePlan!.schedule.isNotEmpty && day <= _activePlan!.schedule.length) {
+      return _activePlan!.schedule[day - 1];
+    }
+    return {'day': day, 'passages': _getTodayPassages(day, _activePlan!.id)};
+  }
+
+  List<String> _getTodayPassages(int day, String planId) {
     final books = BibleData.getBooks();
-    List<DailyReading> dailyReadings = [];
-    int durationDays;
+    if (planId.contains('3months')) {
+      // Novo Testamento
+      final ntBooks = books.where((b) => b.testament == Testament.new_).toList();
+      int ch = ((day - 1) * 3) + 1;
+      int bookIdx = 0;
+      int total = 0;
+      for (int i = 0; i < ntBooks.length; i++) {
+        if (total + ntBooks[i].chapters >= ch) { bookIdx = i; break; }
+        total += ntBooks[i].chapters;
+      }
+      final book = ntBooks[bookIdx.clamp(0, ntBooks.length - 1)];
+      final chInBook = ch - total;
+      return ['${book.name} ${chInBook.clamp(1, book.chapters)}'];
+    }
+    // Bíblia toda
+    int ch = ((day - 1) * 3) + 1;
+    int total = 0;
+    for (final book in books) {
+      if (total + book.chapters >= ch) {
+        final chInBook = ch - total;
+        return ['${book.name} ${chInBook.clamp(1, book.chapters)}'];
+      }
+      total += book.chapters;
+    }
+    return ['Salmos 1'];
+  }
+
+  ReadingPlan createReadingPlan(String type) {
+    int totalDays;
     String name, description;
 
     switch (type) {
       case '1year':
-        durationDays = 365;
+        totalDays = 365;
         name = 'Bíblia em 1 Ano';
-        description = 'Leia toda a Bíblia em 365 dias';
+        description = 'Leia toda a Bíblia em 365 dias (~3 cap/dia)';
         break;
       case '6months':
-        durationDays = 180;
+        totalDays = 180;
         name = 'Bíblia em 6 Meses';
-        description = 'Leia toda a Bíblia em 180 dias';
+        description = 'Leia toda a Bíblia em 180 dias (~6 cap/dia)';
         break;
       case '3months':
-        durationDays = 90;
+        totalDays = 90;
         name = 'Novo Testamento em 3 Meses';
         description = 'Leia o Novo Testamento em 90 dias';
         break;
       default:
-        durationDays = 365;
+        totalDays = 365;
         name = 'Bíblia em 1 Ano';
         description = 'Leia toda a Bíblia em 365 dias';
     }
 
-    // Build chapter list
-    final List<ChapterReading> allChapters = [];
-    final booksToRead = type == '3months'
-        ? books.where((b) => b.testament == Testament.new_).toList()
-        : books;
-
-    for (final book in booksToRead) {
-      for (int i = 1; i <= book.chapters; i++) {
-        allChapters.add(ChapterReading(bookId: book.id, chapter: i));
-      }
-    }
-
-    // Distribute chapters across days
-    final chaptersPerDay = (allChapters.length / durationDays).ceil();
-    for (int day = 1; day <= durationDays; day++) {
-      final start = (day - 1) * chaptersPerDay;
-      final end = min(start + chaptersPerDay, allChapters.length);
-      if (start < allChapters.length) {
-        dailyReadings.add(DailyReading(
-          day: day,
-          chapters: allChapters.sublist(start, end),
-        ));
-      }
-    }
-
+    final schedule = ReadingPlanService.generateSchedule(type);
     return ReadingPlan(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       description: description,
-      durationDays: durationDays,
-      dailyReadings: dailyReadings,
+      totalDays: totalDays,
+      schedule: schedule,
     );
   }
 }

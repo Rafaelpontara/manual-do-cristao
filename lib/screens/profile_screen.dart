@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/bible_models.dart';
@@ -15,8 +16,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.navyDeep : AppTheme.creamLight,
       appBar: AppBar(
-        title: Text('Perfil & Configurações',
-            style: Theme.of(context).textTheme.headlineLarge),
+        title: Text('Perfil & Configurações', style: GoogleFonts.playfairDisplay(color: AppTheme.goldPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -252,7 +252,7 @@ class ProfileScreen extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  const Text('🕊️ Palavra Viva',
+                  const Text('🕊️ Manual do Cristão',
                       style: TextStyle(
                           color: AppTheme.goldPrimary,
                           fontSize: 16,

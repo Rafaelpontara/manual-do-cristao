@@ -106,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
             const SizedBox(height: 40),
             Text(
-              'Palavra Viva',
+              'Manual do Cristão',
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     fontSize: 42,
                     letterSpacing: -1,
@@ -201,14 +201,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Widget _buildReligionCard(Religion religion) {
     final isSelected = _selectedReligion == religion;
-    final icons = {
-      Religion.catholic: '✝️',
-      Religion.evangelical: '📖',
-      Religion.orthodox: '☦️',
-    };
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedReligion = religion),
+      onTap: () => setState(() {
+        _selectedReligion = religion;
+        // Auto-seleciona a versão padrão da religião
+        _selectedVersion = religion.defaultVersion;
+      }),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 16),
@@ -225,7 +224,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ),
         child: Row(
           children: [
-            Text(icons[religion]!, style: const TextStyle(fontSize: 28)),
+            Text(religion.emoji, style: const TextStyle(fontSize: 28)),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -241,6 +240,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   Text(
                     religion.description,
                     style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Versão padrão: ${religion.defaultVersion.shortName}',
+                    style: const TextStyle(color: AppTheme.goldPrimary, fontSize: 10, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -269,7 +273,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Escolha sua tradução preferida:',
+              'Versão selecionada automaticamente para ${_selectedReligion?.displayName ?? "sua tradição"}. Você pode alterar:',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 40),

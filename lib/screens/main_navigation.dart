@@ -7,41 +7,26 @@ import 'books_screen.dart';
 import 'read_screen.dart';
 import 'notes_screen.dart';
 import 'profile_screen.dart';
+import 'search_screen.dart';
+import 'ai_screen.dart';
+import 'settings_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({Key? key}) : super(key: key);
-
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation>
-    with TickerProviderStateMixin {
+class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  late AnimationController _controller;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const BooksScreen(),
-    const ReadScreen(),
-    const NotesScreen(),
-    const ProfileScreen(),
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    BooksScreen(),
+    SearchScreen(),
+    NotesScreen(),
+    ProfileScreen(),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,21 +34,44 @@ class _MainNavigationState extends State<MainNavigation>
     final isDark = provider.isDarkMode;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: Stack(children: [
+        IndexedStack(index: _currentIndex, children: _screens),
+
+        // Botão flutuante de busca
+        Positioned(
+          bottom: 80, right: 20,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            // Configurações
+            FloatingActionButton(
+              heroTag: 'settings',
+              mini: true,
+              backgroundColor: isDark ? AppTheme.navyMid : Colors.white,
+              foregroundColor: AppTheme.warmGray,
+              elevation: 2,
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+              tooltip: 'Configurações',
+              child: const Icon(Icons.settings_rounded, size: 20),
+            ),
+            const SizedBox(height: 8),
+            // Busca
+            FloatingActionButton(
+              heroTag: 'search',
+              mini: true,
+              backgroundColor: AppTheme.goldPrimary,
+              foregroundColor: AppTheme.navyDeep,
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
+              tooltip: 'Buscar versículos',
+              child: const Icon(Icons.search_rounded, size: 22),
+            ),
+          ]),
+        ),
+      ]),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDark ? AppTheme.navyMid : Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: isDark
-                  ? const Color(0xFF1E3048)
-                  : const Color(0xFFE8DCC8),
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(
+              color: isDark ? const Color(0xFF1E3048) : const Color(0xFFE8DCC8), width: 1)),
         ),
         child: SafeArea(
           child: Padding(
@@ -71,11 +79,11 @@ class _MainNavigationState extends State<MainNavigation>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Início'),
-                _buildNavItem(1, Icons.menu_book_rounded, Icons.menu_book_outlined, 'Livros'),
-                _buildNavItem(2, Icons.auto_stories_rounded, Icons.auto_stories_outlined, 'Ler'),
-                _buildNavItem(3, Icons.edit_note_rounded, Icons.edit_note_outlined, 'Notas'),
-                _buildNavItem(4, Icons.person_rounded, Icons.person_outlined, 'Perfil'),
+                _navItem(0, Icons.home_rounded, Icons.home_outlined, 'Início', isDark),
+                _navItem(1, Icons.menu_book_rounded, Icons.menu_book_outlined, 'Livros', isDark),
+                _navItem(2, Icons.search_rounded, Icons.search_outlined, 'Pesquisa', isDark),
+                _navItem(3, Icons.edit_note_rounded, Icons.edit_note_outlined, 'Notas', isDark),
+                _navItem(4, Icons.person_rounded, Icons.person_outlined, 'Perfil', isDark),
               ],
             ),
           ),
@@ -84,51 +92,29 @@ class _MainNavigationState extends State<MainNavigation>
     );
   }
 
-  Widget _buildNavItem(
-      int index, IconData activeIcon, IconData inactiveIcon, String label) {
+  Widget _navItem(int index, IconData active, IconData inactive, String label, bool isDark) {
     final isActive = _currentIndex == index;
-    final provider = Provider.of<AppProvider>(context);
-    final isDark = provider.isDarkMode;
-
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive
-              ? AppTheme.goldPrimary.withOpacity(0.15)
-              : Colors.transparent,
+          color: isActive ? AppTheme.goldPrimary.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : inactiveIcon,
-              color: isActive
-                  ? AppTheme.goldPrimary
-                  : isDark
-                      ? const Color(0xFF5A6E82)
-                      : Colors.grey[400],
-              size: 22, // Smaller icons as requested
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive
-                    ? AppTheme.goldPrimary
-                    : isDark
-                        ? const Color(0xFF5A6E82)
-                        : Colors.grey[400],
-              ),
-            ),
-          ],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(isActive ? active : inactive,
+            color: isActive ? AppTheme.goldPrimary : (isDark ? const Color(0xFF5A6E82) : Colors.grey[400]),
+            size: 22),
+          const SizedBox(height: 3),
+          Text(label, style: TextStyle(
+            fontSize: 10,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            color: isActive ? AppTheme.goldPrimary : (isDark ? const Color(0xFF5A6E82) : Colors.grey[400]),
+          )),
+        ]),
       ),
     );
   }

@@ -3,6 +3,19 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const goldPrimary = Color(0xFFD4A853);
+
+  // ── Fontes padrão do app ──────────────────────────────────────────────────
+  static TextStyle titleStyle({Color? color, double size = 20}) =>
+      GoogleFonts.playfairDisplay(color: color ?? goldPrimary, fontSize: size, fontWeight: FontWeight.bold);
+
+  static TextStyle headingStyle({Color? color, double size = 16}) =>
+      GoogleFonts.lato(color: color, fontSize: size, fontWeight: FontWeight.w700);
+
+  static TextStyle bodyStyle({Color? color, double size = 14}) =>
+      GoogleFonts.lato(color: color, fontSize: size, fontWeight: FontWeight.w400);
+
+  static TextStyle labelStyle({Color? color, double size = 12}) =>
+      GoogleFonts.lato(color: color ?? warmGray, fontSize: size, fontWeight: FontWeight.w500);
   static const goldLight = Color(0xFFE8C87A);
   static const goldDark = Color(0xFFA07830);
   static const navyDeep = Color(0xFF0D1B2A);

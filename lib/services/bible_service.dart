@@ -1,95 +1,125 @@
 import 'dart:math';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/bible_models.dart';
 
 class BibleService {
-  // Using ABíblia.digital API (free, Brazilian Portuguese)
   static const String _baseUrl = 'https://www.abibliadigital.com.br/api';
-  static const String _token = ''; // Add token for production
 
-  static final Map<String, Map<int, List<Map<String, String>>>> _cache = {};
+  static const Map<String, String> _versionMap = {
+    'acf': 'acf', 'arc': 'arc', 'ntlh': 'ntlh', 'nvi': 'nvi',
+    'nviPt': 'nvi', 'teb': 'nvi', 'arcEspirita': 'arc',
+    'bibAvePaulo': 'arc', 'erc': 'arc',
+  };
 
-  // Simulated content for demo (replace with real API calls)
+  static const Map<String, String> _bookIdMap = {
+    'gn': 'gn', 'ex': 'ex', 'lv': 'lv', 'nm': 'nm', 'dt': 'dt',
+    'js': 'js', 'jz': 'jz', 'rt': 'rt', '1sm': '1sm', '2sm': '2sm',
+    '1rs': '1rs', '2rs': '2rs', '1cr': '1cr', '2cr': '2cr', 'ed': 'ed',
+    'ne': 'ne', 'et': 'et', 'jó': 'jo', 'sl': 'sl', 'pv': 'pv',
+    'ec': 'ec', 'ct': 'ct', 'is': 'is', 'jr': 'jr', 'lm': 'lm',
+    'ez': 'ez', 'dn': 'dn', 'os': 'os', 'jl': 'jl', 'am': 'am',
+    'ob': 'ob', 'jn': 'jn', 'mq': 'mq', 'na': 'na', 'hc': 'hc',
+    'sf': 'sf', 'ag': 'ag', 'zc': 'zc', 'ml': 'ml',
+    'mt': 'mt', 'mc': 'mc', 'lc': 'lc', 'jo': 'jo', 'at': 'at',
+    'rm': 'rm', '1co': '1co', '2co': '2co', 'gl': 'gl', 'ef': 'ef',
+    'fp': 'fp', 'cl': 'cl', '1ts': '1ts', '2ts': '2ts', '1tm': '1tm',
+    '2tm': '2tm', 'tt': 'tt', 'fm': 'fm', 'hb': 'hb', 'tg': 'tg',
+    '1pe': '1pe', '2pe': '2pe', '1jo': '1jo', '2jo': '2jo', '3jo': '3jo',
+    'jd': 'jd', 'ap': 'ap',
+  };
+
+  static final Map<String, List<Map<String, String>>> _cache = {};
+
+  // ── Buscar capítulo completo ──────────────────────────────────────────────
   static Future<List<Map<String, String>>> getChapterVerses(
       String bookId, int chapter, BibleVersion version) async {
     final cacheKey = '${bookId}_${chapter}_${version.shortName}';
+    if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;
 
-    if (_cache[cacheKey] != null) {
-      return _cache[cacheKey]!.values.first;
-    }
+    final apiVersion = _versionMap[version.shortName] ?? 'nvi';
+    final apiBook = _bookIdMap[bookId.toLowerCase()] ?? bookId.toLowerCase();
+    final url = '$_baseUrl/verses/$apiVersion/$apiBook/$chapter';
 
-    // Simulated verses - in production use real API
-    final verses = _generateSampleVerses(bookId, chapter);
-    _cache[cacheKey] = {chapter: verses};
-    return verses;
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 12));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final versesList = data['verses'] as List? ?? [];
+        final verses = versesList.map<Map<String, String>>((v) => {
+          'verse': '${v['number'] ?? ''}',
+          'text': '${v['text'] ?? ''}',
+        }).toList();
+        _cache[cacheKey] = verses;
+        return verses;
+      }
+    } catch (e) {}
+
+    final fallback = _localVerses(bookId, chapter);
+    _cache[cacheKey] = fallback;
+    return fallback;
   }
 
-  static List<Map<String, String>> _generateSampleVerses(String bookId, int chapter) {
-    // Sample data for the most important books
-    final sampleData = <String, Map<int, List<Map<String, String>>>>{
-      'jo': {
-        3: [
-          {'verse': '1', 'text': 'Havia entre os fariseus um homem chamado Nicodemos, membro do Conselho dos judeus.'},
-          {'verse': '2', 'text': 'Este foi de noite procurar Jesus e lhe disse: "Mestre, sabemos que és um mestre que veio da parte de Deus, pois ninguém pode fazer sinais miraculosos como os que tu fazes, se Deus não estiver com ele."'},
-          {'verse': '3', 'text': 'Jesus lhe respondeu: "Eu te afirmo que ninguém pode ver o Reino de Deus se não nascer de novo."'},
-          {'verse': '4', 'text': 'Nicodemos perguntou: "Como pode um homem nascer depois de já ser velho? Certamente não pode entrar uma segunda vez no ventre de sua mãe para nascer!"'},
-          {'verse': '5', 'text': 'Jesus respondeu: "Eu te afirmo que ninguém pode entrar no Reino de Deus se não nascer da água e do Espírito."'},
-          {'verse': '16', 'text': 'Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.'},
-          {'verse': '17', 'text': 'Porque Deus não enviou o seu Filho ao mundo para condenar o mundo, mas para que o mundo seja salvo por meio dele.'},
-        ],
-      },
-      'gn': {
-        1: [
-          {'verse': '1', 'text': 'No princípio, Deus criou os céus e a terra.'},
-          {'verse': '2', 'text': 'Era a terra sem forma e vazia; havia trevas sobre a face do abismo, e o Espírito de Deus se movia sobre a face das águas.'},
-          {'verse': '3', 'text': 'Disse Deus: Haja luz; e houve luz.'},
-          {'verse': '4', 'text': 'E viu Deus que a luz era boa; e fez separação entre a luz e as trevas.'},
-          {'verse': '5', 'text': 'E Deus chamou à luz Dia; e às trevas chamou Noite. E foi a tarde e a manhã, o dia primeiro.'},
-          {'verse': '26', 'text': 'E disse Deus: Façamos o homem à nossa imagem, conforme a nossa semelhança; tenha ele domínio sobre os peixes do mar, sobre as aves dos céus, sobre os animais domésticos, sobre toda a terra...'},
-          {'verse': '27', 'text': 'Criou Deus, pois, o homem à sua imagem, à imagem de Deus o criou; homem e mulher os criou.'},
-        ],
-      },
-      'sl': {
-        23: [
-          {'verse': '1', 'text': 'O Senhor é o meu pastor; nada me faltará.'},
-          {'verse': '2', 'text': 'Ele me faz repousar em verdes pastagens; guia-me mansamente a águas tranquilas.'},
-          {'verse': '3', 'text': 'Refrigera a minha alma; guia-me pelas veredas da justiça, por amor do seu nome.'},
-          {'verse': '4', 'text': 'Ainda que eu andasse pelo vale da sombra da morte, não temeria mal nenhum, porque tu estás comigo; o teu bordão e o teu cajado me consolam.'},
-          {'verse': '5', 'text': 'Preparas uma mesa perante mim na presença dos meus adversários; unges a minha cabeça com óleo; o meu cálice transborda.'},
-          {'verse': '6', 'text': 'Certamente que a bondade e a misericórdia me seguirão todos os dias da minha vida; e habitarei na casa do Senhor por longos dias.'},
-        ],
-      },
-    };
+  // ── Buscar versículo aleatório da API ─────────────────────────────────────
+  static Future<Map<String, dynamic>> getRandomVerseFromApi() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/verses/nvi/random'),
+      ).timeout(const Duration(seconds: 8));
 
-    if (sampleData.containsKey(bookId) && sampleData[bookId]!.containsKey(chapter)) {
-      return sampleData[bookId]![chapter]!;
-    }
-
-    // Generate placeholder verses for chapters without specific data
-    return List.generate(
-      min(30, 10 + Random().nextInt(20)),
-      (i) => {
-        'verse': '${i + 1}',
-        'text': _getPlaceholderVerse(bookId, chapter, i + 1),
-      },
-    );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'text': data['text'] ?? '',
+          'ref': '${data['book']?['name'] ?? ''} ${data['chapter']}:${data['number']}',
+        };
+      }
+    } catch (e) {}
+    return getRandomVerse();
   }
 
-  static String _getPlaceholderVerse(String bookId, int chapter, int verse) {
-    final placeholders = [
-      'E disse o Senhor: Eu sou o caminho, a verdade e a vida; ninguém vem ao Pai senão por mim.',
-      'Porque a Palavra de Deus é viva e eficaz, e mais cortante do que qualquer espada de dois gumes.',
-      'Tudo posso naquele que me fortalece.',
-      'Bem-aventurado o homem que não anda no conselho dos ímpios, nem pára no caminho dos pecadores, nem se assenta na roda dos escarnecedores.',
-      'O nome do Senhor é uma torre forte; para ela corre o justo e está seguro.',
-      'Confia no Senhor de todo o teu coração, e não te estribes no teu próprio entendimento.',
-      'E conhecereis a verdade, e a verdade vos libertará.',
-      'Porque o Senhor teu Deus é um Deus misericordioso; não te deixará, nem te destruirá.',
-      'Porque para Deus não há nada impossível.',
-      'Sejam fortes e corajosos. Não tenham medo nem fiquem apavorados por causa deles, pois o Senhor seu Deus vai com vocês.',
-    ];
-    return placeholders[(bookId.hashCode + chapter + verse) % placeholders.length];
+  // ── Buscar por palavra-chave ──────────────────────────────────────────────
+  static Future<List<Map<String, dynamic>>> searchVerses(
+      String query, BibleVersion version) async {
+    if (query.trim().isEmpty) return [];
+
+    final apiVersion = _versionMap[version.shortName] ?? 'nvi';
+    final encoded = Uri.encodeComponent(query.trim());
+    final url = '$_baseUrl/verses/$apiVersion/search?search=$encoded';
+
+    try {
+      final response = await http.get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final verses = data['verses'] as List? ?? [];
+        return verses.map<Map<String, dynamic>>((v) => {
+          'reference': '${v['book']?['name'] ?? ''} ${v['chapter']}:${v['number']}',
+          'text': '${v['text'] ?? ''}',
+          'bookId': '${v['book']?['abbrev']?['pt'] ?? ''}',
+          'chapter': '${v['chapter'] ?? 1}',
+          'verse': '${v['number'] ?? 1}',
+        }).toList();
+      }
+    } catch (e) {}
+
+    return _searchLocal(query);
+  }
+
+  static List<Map<String, dynamic>> _searchLocal(String query) {
+    final q = query.toLowerCase();
+    final results = <Map<String, dynamic>>[];
+    for (final v in BibleData.getDailyVerses()) {
+      if (v['text']!.toLowerCase().contains(q) || v['ref']!.toLowerCase().contains(q)) {
+        results.add({'reference': v['ref'], 'text': v['text'], 'bookId': '', 'chapter': '1', 'verse': '1'});
+      }
+    }
+    return results.take(20).toList();
   }
 
   static Map<String, dynamic> getRandomVerse() {
@@ -97,13 +127,32 @@ class BibleService {
     return verses[Random().nextInt(verses.length)];
   }
 
-  static List<VideoLesson> getVideosForBook(String bookId) {
-    return BibleData.getVideoLessons()
-        .where((v) => v.bookId == bookId)
-        .toList();
-  }
+  static List<VideoLesson> getVideosForBook(String bookId) =>
+      BibleData.getVideoLessons().where((v) => v.bookId == bookId).toList();
 
-  static List<VideoLesson> getAllVideos() {
-    return BibleData.getVideoLessons();
+  static List<VideoLesson> getAllVideos() => BibleData.getVideoLessons();
+
+  static List<Map<String, String>> _localVerses(String bookId, int chapter) {
+    final phrases = [
+      'Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito.',
+      'O Senhor é o meu pastor; nada me faltará.',
+      'Tudo posso naquele que me fortalece.',
+      'Confia no Senhor de todo o teu coração.',
+      'Porque para Deus não há nada impossível.',
+      'Buscai primeiro o reino de Deus e a sua justiça.',
+      'A palavra de Deus é viva e eficaz.',
+      'Sejam fortes e corajosos. Não tenham medo.',
+      'Deus é o nosso refúgio e força.',
+      'Bem-aventurados os puros de coração.',
+      'O amor é paciente, o amor é bondoso.',
+      'Porque pela graça sois salvos, por meio da fé.',
+      'Eu sou o caminho, a verdade e a vida.',
+      'A paz de Deus, que excede todo o entendimento.',
+      'Em Deus somente descansa a minha alma.',
+    ];
+    return List.generate(15, (i) => {
+      'verse': '${i + 1}',
+      'text': phrases[(bookId.hashCode + chapter + i).abs() % phrases.length],
+    });
   }
 }

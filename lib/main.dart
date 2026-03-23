@@ -5,16 +5,22 @@ import 'providers/app_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/main_navigation.dart';
+import 'services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Orientação apenas retrato
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
+  // Inicializa notificações
+  await NotificationService.init();
+
+  // Verifica se é primeiro uso
   final prefs = await SharedPreferences.getInstance();
   final isFirstTime = prefs.getBool('onboardingComplete') != true;
 
@@ -28,7 +34,6 @@ void main() async {
 
 class PalavraVivaApp extends StatelessWidget {
   final bool isFirstTime;
-
   const PalavraVivaApp({Key? key, required this.isFirstTime}) : super(key: key);
 
   @override
@@ -36,7 +41,7 @@ class PalavraVivaApp extends StatelessWidget {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
         return MaterialApp(
-          title: 'Palavra Viva',
+          title: 'Manual do Cristão',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/app_provider.dart';
@@ -31,7 +32,7 @@ class _NotesScreenState extends State<NotesScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.navyDeep : AppTheme.creamLight,
       appBar: AppBar(
-        title: Text('Anotações', style: Theme.of(context).textTheme.headlineLarge),
+        title: Text('Anotações', style: GoogleFonts.playfairDisplay(color: AppTheme.goldPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
@@ -117,7 +118,7 @@ class _NotesScreenState extends State<NotesScreen> {
       null: null,
     };
 
-    final accentColor = noteColors[note.color];
+    final accentColor = noteColors[note.colorTag];
 
     return GestureDetector(
       onTap: () => _openNoteEditor(context, provider, isDark, note: note),
@@ -313,7 +314,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         TextEditingController(text: widget.note?.content ?? '');
     _refController =
         TextEditingController(text: widget.note?.verseReference ?? '');
-    _selectedColor = widget.note?.color;
+    _selectedColor = widget.note?.colorTag;
   }
 
   @override
@@ -342,7 +343,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           : null,
       createdAt: widget.note?.createdAt ?? now,
       updatedAt: now,
-      color: _selectedColor,
+      colorTag: _selectedColor ?? 'gold',
     );
     Navigator.pop(context, note);
   }
