@@ -1,117 +1,134 @@
-# 📖 Palavra Viva — Aplicativo Bíblico Flutter
+# 🕊️ Manual do Cristão
 
-## 🕊️ Visão Geral
+> Sua jornada espiritual começa aqui. Leia, estude, medite e cresça na fé.
 
-**Palavra Viva** é um aplicativo bíblico completo desenvolvido em Flutter/Dart, com design sofisticado inspirado em manuscritos iluminados medievais — paleta dourada e azul-marinho profundo. Ideal para leitores de todas as idades, com acessibilidade especial para idosos.
-
----
-
-## ✨ Funcionalidades Implementadas
-
-### 📚 Leitura Bíblica
-- **66 livros** completos (Antigo e Novo Testamento)
-- **Filtro proeminente** por Antigo/Novo Testamento com chips visuais
-- Seleção de capítulos com grade visual de progresso
-- **Versículos interativos** — toque para selecionar, pressão longa para opções
-
-### 🎨 Marcação e Grifos
-- **4 cores de grifo**: amarelo, verde, azul, rosa
-- Marcação de versículos favoritos (bookmarks)
-- Lista de todos os grifos e favoritos na tela inicial
-
-### 📝 Bloco de Anotações
-- Criação e edição de notas com título, conteúdo e referência bíblica
-- **5 cores de destaque** para organização visual
-- Busca em tempo real por título ou conteúdo
-- Confirmação antes de excluir
-
-### 📅 Planos de Leitura Personalizados
-- **Bíblia em 1 Ano** (365 dias, 3-4 cap/dia)
-- **Bíblia em 6 Meses** (180 dias, 6-8 cap/dia)
-- **Novo Testamento em 3 Meses** (90 dias)
-- Progresso diário com marcação de conclusão
-- Barra de progresso em tempo real
-
-### 📊 Progresso de Leitura
-- **Porcentagem por livro** visível diretamente na lista
-- Barra de progresso por capítulo
-- Estatísticas gerais (livros concluídos, % total, dias seguidos)
-- 🔥 **Sequência de dias** (streak) de leitura
-
-### 🔀 Versículo Aleatório
-- Acesso rápido na Home com botão dedicado
-- Compartilhamento direto com um clique
-
-### 📤 Compartilhamento
-- **Compartilhar** versículos via redes sociais / WhatsApp / mensagens
-- **Copiar** com formatação profissional: `"texto" — Livro cap:versículo`
-- Disponível em todo versículo e no card do dia
-
-### ⛪ Seleção de Religião e Versão
-- **Católica** — inclui deuterocanônicos; versões: ACF, NTLH, NVI-PT
-- **Evangélica/Protestante** — 66 livros; versões: ACF, ARC, NTLH, NVI-PT
-- **Ortodoxa** — versões: ACF, NTLH
-- Onboarding completo na primeira abertura
-
-### 📱 Versões da Bíblia
-- ACF — Almeida Corrigida Fiel
-- ARC — Almeida Revista e Corrigida
-- NTLH — Nova Tradução na Linguagem de Hoje
-- NVI-PT — Nova Versão Internacional (Português)
-
-### 🌙 Tema Claro / Escuro
-- Toggle rápido no header da Home
-- Persistido entre sessões com SharedPreferences
-
-### 🎥 Vídeos Explicativos (YouTube)
-- Listagem de padres e pastores brasileiros relevantes
-- Padre Reginaldo Manzotti, Padre Fábio de Melo
-- Pastor Cláudio Duarte, Lucinho Barreto
-- Integrado por livro bíblico
-- Aba "Vídeos" na tela de Leitura
-
-### 🔔 Notificações Diárias
-- Interface para configurar lembretes
-- Suporte a `flutter_local_notifications`
-- Permissões do Android configuradas
-
-### 🎤 Busca por Voz (Acessibilidade para Idosos)
-- Interface intuitiva com botão grande de microfone
-- Instruções claras para falar o nome de livros/versículos
-- Integrado com `speech_to_text`
-
-### ♿ Modo Acessível
-- Controle de tamanho de fonte (14px–28px)
-- Botão "Maximizar Fonte" para idosos
-- Interface simplificada e clara
+![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-3.x-blue?logo=dart)
+![Android](https://img.shields.io/badge/Android-minSdk%2026-green?logo=android)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
-## 🏗️ Estrutura do Projeto
+## 📱 Sobre o App
+
+**Manual do Cristão** é um aplicativo completo de Bíblia para Android, desenvolvido em Flutter, com foco em acessibilidade, leitura offline e experiência espiritual rica. Disponível para católicos e evangélicos com suporte a múltiplas versões bíblicas.
+
+---
+
+## ✨ Funcionalidades
+
+### 📖 Bíblia
+- **Leitura offline completa** — mais de 31.000 versículos da ACF embarcados no app
+- **Múltiplas versões** — ACF, NVI, ARC, NTLH (baixáveis offline individualmente)
+- **Planos de leitura** — Bíblia em 1 ano, 6 meses, NT em 3 meses ou leitura livre
+- **Leitura em voz alta (TTS)** — ouça os capítulos enquanto faz outras atividades
+- **Grifos e anotações** — salve reflexões e destaque versículos favoritos
+- **Favoritos** — acesso rápido aos versículos mais queridos
+
+### 🎤 Busca Inteligente
+- **Busca por voz** com normalização PT-BR (reconhece "Jo", "João", "Jó" corretamente)
+- **Busca por texto** em toda a Bíblia
+- **Parser bíblico** — reconhece abreviações, nomes completos e variações faladas
+
+### 🔔 Notificações
+- **Versículo do dia** com texto real da API (30 versículos famosos em rotação diária)
+- **Plano de leitura** — lembrete para continuar sua leitura
+- **Mensagens motivacionais** — palavras de encorajamento
+- Reagendamento automático após reinício do celular
+
+### 🎬 Vídeos
+- Pregações de Padre Reginaldo Manzotti, Padre Fábio de Melo, Pastor Cláudio Duarte e outros
+- Integração com YouTube
+
+### 👤 Perfil
+- Foto de perfil (câmera ou galeria)
+- Estatísticas de leitura (streak, livros lidos, notas)
+- Configurações personalizadas por religião
+
+### ⚙️ Configurações
+- Tema claro/escuro
+- Tamanho de fonte ajustável
+- Versão e religião configuráveis
+- Gerenciamento de versões offline
+- Atualização de texto bíblico
+
+### ♿ Acessibilidade
+- Fonte ajustável (14–28px)
+- Onboarding com scroll — funciona em qualquer tamanho de fonte
+- Busca por voz integrada
+
+---
+
+## 🏗️ Tecnologias
+
+| Tecnologia | Uso |
+|---|---|
+| **Flutter 3.x** | Framework principal |
+| **Dart 3.x** | Linguagem |
+| **Provider** | Gerenciamento de estado |
+| **SQLite (sqflite)** | Cache offline de versículos |
+| **Shared Preferences** | Configurações persistentes |
+| **awesome_notifications** | Notificações agendadas |
+| **speech_to_text** | Reconhecimento de voz |
+| **image_picker** | Foto de perfil |
+| **flutter_tts** | Leitura em voz alta |
+| **http** | Requisições às APIs |
+| **url_launcher** | Abertura de links externos |
+
+---
+
+## 🌐 APIs Utilizadas
+
+| Prioridade | API | Descrição |
+|---|---|---|
+| 0️⃣ | `assets/bible/acf.json` | Bíblia completa embarcada (offline) |
+| 1️⃣ | `bible-api.com` | Tradução Almeida PT-BR (principal online) |
+| 2️⃣ | `bolls.life` | Fallback online |
+| 3️⃣ | `abibliadigital.com.br` | Quando disponível |
+| 4️⃣ | Versículos embarcados | Fallback offline parcial |
+
+---
+
+## 📦 Estrutura do Projeto
 
 ```
 lib/
-├── main.dart                    # Entry point
-├── theme/
-│   └── app_theme.dart           # Temas claro e escuro (Playfair + Lato)
+├── main.dart                    # Entrada do app
 ├── models/
-│   └── bible_models.dart        # BibleBook, Note, ReadingPlan, VideoLesson...
+│   └── bible_models.dart        # Modelos de dados
 ├── providers/
-│   └── app_provider.dart        # Estado global com ChangeNotifier
-├── services/
-│   └── bible_service.dart       # API e dados bíblicos
+│   └── app_provider.dart        # Estado global
 ├── screens/
-│   ├── onboarding_screen.dart   # Seleção de religião e versão
-│   ├── main_navigation.dart     # Bottom nav bar
-│   ├── home_screen.dart         # Dashboard principal
-│   ├── books_screen.dart        # Lista de livros com filtro AT/NT
-│   ├── chapters_screen.dart     # Grade de capítulos com progresso
-│   ├── chapter_reader_screen.dart # Leitor com grifos e ações
-│   ├── read_screen.dart         # Plano de leitura + cronológico + vídeos
-│   ├── notes_screen.dart        # Bloco de anotações
-│   └── profile_screen.dart      # Configurações e estatísticas
+│   ├── home_screen.dart         # Tela inicial
+│   ├── books_screen.dart        # Lista de livros
+│   ├── chapters_screen.dart     # Capítulos
+│   ├── chapter_reader_screen.dart # Leitura
+│   ├── search_screen.dart       # Busca + voz
+│   ├── notes_screen.dart        # Anotações
+│   ├── read_screen.dart         # Planos + vídeos
+│   ├── profile_screen.dart      # Perfil
+│   ├── settings_screen.dart     # Configurações
+│   ├── download_screen.dart     # Versões offline
+│   ├── ai_screen.dart           # Assistente IA (em desenvolvimento)
+│   └── onboarding_screen.dart   # Primeiro uso
+├── services/
+│   ├── bible_service.dart       # Acesso às APIs bíblicas
+│   ├── notification_service.dart # Notificações
+│   ├── offline_service.dart     # Cache SQLite
+│   ├── reading_plan_service.dart # Planos de leitura
+│   └── tts_service.dart         # Leitura em voz alta
+├── theme/
+│   └── app_theme.dart           # Tema do app
+├── utils/
+│   └── bible_reference_parser.dart # Parser de referências bíblicas
 └── widgets/
-    └── progress_ring.dart       # Widget de anel de progresso
+    └── progress_ring.dart       # Widget de progresso
+
+assets/
+├── bible/
+│   └── acf.json                 # Bíblia completa offline (~4MB)
+└── icon/
+    └── app_icon.png             # Ícone do app
 ```
 
 ---
@@ -119,76 +136,111 @@ lib/
 ## 🚀 Como Rodar
 
 ### Pré-requisitos
-- Flutter SDK ≥ 3.0.0
-- Dart ≥ 3.0.0
-- Android Studio ou VS Code com extensão Flutter
+- Flutter 3.x
+- Dart 3.x
+- Android Studio / VS Code
+- Java 21
+- Android SDK (minSdk 26)
 
 ### Instalação
 
 ```bash
-cd biblia_app
+# Clone o repositório
+git clone https://github.com/Rafaelpontara/manual-do-cristao.git
+
+# Entre na pasta
+cd manual-do-cristao
+
+# Instale as dependências
 flutter pub get
+
+# Rode o app
 flutter run
 ```
 
-### Para Android
+### Build de Produção
+
 ```bash
+# APK
 flutter build apk --release
+
+# AAB (Play Store)
+flutter build appbundle --release
 ```
 
-### Para iOS
+---
+
+## 📋 Configuração do Ambiente
+
+### `pubspec.yaml` — Dependências principais
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.x
+  shared_preferences: ^2.x
+  sqflite: ^2.x
+  http: ^1.x
+  awesome_notifications: ^0.10.1
+  speech_to_text: ^7.0.0
+  image_picker: ^1.0.7
+  flutter_tts: ^4.x
+  url_launcher: ^6.x
+  connectivity_plus: ^7.x
+```
+
+### Assets
+
+```yaml
+flutter:
+  assets:
+    - assets/bible/acf.json
+```
+
+---
+
+## 📥 Download da Bíblia Offline
+
+O `acf.json` já está incluído no repositório. Para regenerar ou baixar versões adicionais:
+
 ```bash
-flutter build ipa --release
+# Baixa a Bíblia completa via bible-api.com (~45 min)
+python download_bible.py
 ```
 
 ---
 
-## 📦 Principais Dependências
+## 🗺️ Roadmap
 
-| Pacote | Uso |
-|--------|-----|
-| `provider` | Gerenciamento de estado |
-| `shared_preferences` | Persistência de dados |
-| `google_fonts` | Fontes Playfair Display + Lato |
-| `share_plus` | Compartilhamento nativo |
-| `speech_to_text` | Busca por voz |
-| `flutter_local_notifications` | Notificações locais |
-| `youtube_player_flutter` | Player de vídeos YouTube |
-| `sqflite` | Banco de dados local |
-| `uuid` | IDs únicos para notas |
-| `table_calendar` | Calendário de progresso |
-
----
-
-## 🎨 Design System
-
-### Paleta de Cores
-| Cor | Hex | Uso |
-|-----|-----|-----|
-| Gold Primary | `#D4A853` | Destaques, CTAs, progresso |
-| Navy Deep | `#0D1B2A` | Background escuro |
-| Cream White | `#F8F3E8` | Texto principal claro |
-| Forest Green | `#2D6A4F` | Concluído, sucesso |
-| Crimson | `#B5451B` | Alertas, streak |
-
-### Tipografia
-- **Display / Títulos**: Playfair Display (elegante, sacro)
-- **Corpo / UI**: Lato (legível, moderno)
-
----
-
-## 🔮 Próximas Funcionalidades
-
-- [ ] Integração real com API ABíblia.digital
-- [ ] Audio player para ouvir a Bíblia
-- [ ] Estudo por temas (Amor, Perdão, Fé...)
-- [ ] Grupos de estudo / compartilhamento social
-- [ ] Backup em nuvem (Firebase)
-- [ ] Modo offline completo com conteúdo baixado
-- [ ] Comentários de estudiosos por versículo
+- [x] Bíblia offline completa (ACF)
+- [x] Busca por voz com normalização PT-BR
+- [x] Notificações com versículo real da API
+- [x] Planos de leitura
+- [x] Foto de perfil
+- [x] Versões adicionais offline
+- [ ] Assistente IA "Luz" (em desenvolvimento)
+- [ ] Sincronização na nuvem
+- [ ] Widget na tela inicial do Android
+- [ ] Compartilhamento de versículos
+- [ ] Plano de leitura personalizado
 
 ---
 
 ## 📄 Licença
 
-MIT License — Feito com fé e amor 🕊️
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 🙏 Créditos
+
+- Textos bíblicos: [bible-api.com](https://bible-api.com) — Tradução Almeida (Domínio Público)
+- Notificações: [awesome_notifications](https://pub.dev/packages/awesome_notifications)
+- Ícones: Material Design Icons
+
+---
+
+<div align="center">
+  <strong>🕊️ Manual do Cristão — Feito com fé e amor</strong>
+</div>
