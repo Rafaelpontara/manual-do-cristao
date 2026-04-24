@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 import 'main_navigation.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -73,73 +73,84 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
+  // ── Página 1: Boas-vindas ─────────────────────────────────────────────────
   Widget _buildWelcomePage() {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            // Logo
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [AppTheme.goldPrimary, AppTheme.goldDark],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.goldPrimary.withOpacity(0.4),
-                    blurRadius: 40,
-                    spreadRadius: 10,
+      child: Column(
+        children: [
+          // Conteúdo scrollável
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(32, 32, 32, 16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  // Logo
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [AppTheme.goldPrimary, AppTheme.goldDark],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.goldPrimary.withOpacity(0.4),
+                          blurRadius: 40,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: AppTheme.navyDeep,
+                      size: 60,
+                    ),
                   ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Manual do Cristão',
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                          fontSize: 36,
+                          letterSpacing: -1,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Sua jornada espiritual começa aqui.\nLeia, estude, medite e cresça na fé.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.warmGray,
+                          height: 1.6,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  _buildFeatureRow(Icons.book_outlined, 'Todos os livros bíblicos'),
+                  const SizedBox(height: 16),
+                  _buildFeatureRow(Icons.highlight, 'Grifos e anotações'),
+                  const SizedBox(height: 16),
+                  _buildFeatureRow(Icons.calendar_today, 'Planos de leitura'),
+                  const SizedBox(height: 16),
+                  _buildFeatureRow(Icons.play_circle_outline, 'Vídeos explicativos'),
+                  const SizedBox(height: 24),
                 ],
               ),
-              child: const Icon(
-                Icons.menu_book_rounded,
-                color: AppTheme.navyDeep,
-                size: 60,
-              ),
             ),
-            const SizedBox(height: 40),
-            Text(
-              'Manual do Cristão',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    fontSize: 42,
-                    letterSpacing: -1,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Sua jornada espiritual começa aqui.\nLeia, estude, medite e cresça na fé.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.warmGray,
-                    height: 1.6,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const Spacer(),
-            _buildFeatureRow(Icons.book_outlined, 'Todos os livros bíblicos'),
-            const SizedBox(height: 16),
-            _buildFeatureRow(Icons.highlight, 'Grifos e anotações'),
-            const SizedBox(height: 16),
-            _buildFeatureRow(Icons.calendar_today, 'Planos de leitura'),
-            const SizedBox(height: 16),
-            _buildFeatureRow(Icons.play_circle_outline, 'Vídeos explicativos'),
-            const Spacer(),
-            SizedBox(
+          ),
+          // Botão sempre visível na parte inferior
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 8, 32, 32),
+            child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _nextPage,
                 child: const Text('Começar'),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -156,45 +167,59 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: Icon(icon, color: AppTheme.goldPrimary, size: 18),
         ),
         const SizedBox(width: 16),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.creamWhite,
-              ),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.creamWhite,
+                ),
+          ),
         ),
       ],
     );
   }
 
+  // ── Página 2: Religião ────────────────────────────────────────────────────
   Widget _buildReligionPage() {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Sua tradição',
-              style: Theme.of(context).textTheme.displayMedium,
+      child: Column(
+        children: [
+          // Conteúdo scrollável
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(32, 32, 32, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sua tradição',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Escolha sua denominação para personalizarmos sua experiência:',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 32),
+                  ...Religion.values.map((r) => _buildReligionCard(r)),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Escolha sua denominação para personalizarmos sua experiência:',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 40),
-            ...Religion.values.map((r) => _buildReligionCard(r)),
-            const Spacer(),
-            SizedBox(
+          ),
+          // Botão sempre visível
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 8, 32, 32),
+            child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _selectedReligion != null ? _nextPage : null,
                 child: const Text('Continuar'),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -205,7 +230,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     return GestureDetector(
       onTap: () => setState(() {
         _selectedReligion = religion;
-        // Auto-seleciona a versão padrão da religião
         _selectedVersion = religion.defaultVersion;
       }),
       child: AnimatedContainer(
@@ -244,7 +268,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   const SizedBox(height: 4),
                   Text(
                     'Versão padrão: ${religion.defaultVersion.shortName}',
-                    style: const TextStyle(color: AppTheme.goldPrimary, fontSize: 10, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: AppTheme.goldPrimary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -257,37 +284,49 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
+  // ── Página 3: Versão da Bíblia ────────────────────────────────────────────
   Widget _buildVersionPage() {
     final versions = _selectedReligion?.availableVersions ?? BibleVersion.values;
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Versão da Bíblia',
-              style: Theme.of(context).textTheme.displayMedium,
+      child: Column(
+        children: [
+          // Conteúdo scrollável
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(32, 32, 32, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    'Versão da Bíblia',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Versão selecionada automaticamente para ${_selectedReligion?.displayName ?? "sua tradição"}. Você pode alterar:',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 32),
+                  ...versions.map((v) => _buildVersionCard(v)),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Versão selecionada automaticamente para ${_selectedReligion?.displayName ?? "sua tradição"}. Você pode alterar:',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 40),
-            ...versions.map((v) => _buildVersionCard(v)),
-            const Spacer(),
-            SizedBox(
+          ),
+          // Botão sempre visível
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 8, 32, 32),
+            child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _selectedVersion != null ? _complete : null,
                 child: const Text('Começar a Ler'),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

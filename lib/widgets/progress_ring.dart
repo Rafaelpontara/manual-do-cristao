@@ -10,14 +10,14 @@ class ProgressRing extends StatelessWidget {
   final Widget? child;
 
   const ProgressRing({
-    Key? key,
+    super.key,
     required this.progress,
     this.size = 60,
     this.strokeWidth = 4,
     required this.foregroundColor,
     required this.backgroundColor,
     this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

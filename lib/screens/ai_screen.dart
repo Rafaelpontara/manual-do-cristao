@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 import '../models/bible_models.dart';
 
 class AiScreen extends StatefulWidget {
-  const AiScreen({Key? key}) : super(key: key);
+  const AiScreen({super.key});
   @override
   State<AiScreen> createState() => _AiScreenState();
 }

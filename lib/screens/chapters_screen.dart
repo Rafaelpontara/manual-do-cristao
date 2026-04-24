@@ -9,7 +9,7 @@ import 'chapter_reader_screen.dart';
 class ChaptersScreen extends StatelessWidget {
   final BibleBook book;
 
-  const ChaptersScreen({Key? key, required this.book}) : super(key: key);
+  const ChaptersScreen({super.key, required this.book});
 
   @override
   Widget build(BuildContext context) {

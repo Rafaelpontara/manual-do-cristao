@@ -100,7 +100,18 @@ class OfflineService {
     await database.delete('verses');
     final prefs = await SharedPreferences.getInstance();
     final keys = prefs.getKeys().where((k) => k.startsWith('offline_')).toList();
-    for (final key in keys) await prefs.remove(key);
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
     await prefs.setBool('bible_downloaded', false);
+  }
+
+  // Remove apenas os versículos de uma versão específica
+  static Future<void> clearVersionCache(String version) async {
+    final database = await db;
+    await database.delete('verses', where: 'version = ?', whereArgs: [version]);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('downloaded_$version', false);
+    await prefs.setInt('verses_$version', 0);
   }
 }

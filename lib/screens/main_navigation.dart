@@ -94,6 +94,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Widget _navItem(int index, IconData active, IconData inactive, String label, bool isDark) {
     final isActive = _currentIndex == index;
+    final inactiveColor = isDark ? const Color(0xFF5A6E82) : Colors.grey.shade400;
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
@@ -106,13 +107,13 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(isActive ? active : inactive,
-            color: isActive ? AppTheme.goldPrimary : (isDark ? const Color(0xFF5A6E82) : Colors.grey[400]),
+            color: isActive ? AppTheme.goldPrimary : inactiveColor,
             size: 22),
           const SizedBox(height: 3),
           Text(label, style: TextStyle(
             fontSize: 10,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            color: isActive ? AppTheme.goldPrimary : (isDark ? const Color(0xFF5A6E82) : Colors.grey[400]),
+            color: isActive ? AppTheme.goldPrimary : inactiveColor,
           )),
         ]),
       ),

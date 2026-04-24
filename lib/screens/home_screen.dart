@@ -14,7 +14,7 @@ import 'books_screen.dart';
 import 'read_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -630,9 +630,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               Uri url;
               if (v.youtubeId.startsWith('search:')) {
                 final query = v.youtubeId.replaceFirst('search:', '');
-                url = Uri.parse('https://www.youtube.com/results?search_query=\$query');
+                url = Uri.parse('https://www.youtube.com/results?search_query=$query');
               } else {
-                url = Uri.parse('https://www.youtube.com/watch?v=\${v.youtubeId}');
+                url = Uri.parse('https://www.youtube.com/watch?v=${v.youtubeId}');
               }
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);

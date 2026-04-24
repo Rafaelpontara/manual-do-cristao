@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -8,6 +9,7 @@ import '../services/offline_service.dart';
 
 class AppProvider extends ChangeNotifier {
   bool _isDarkMode = true;
+  String _iconColorMode = 'system'; // 'white', 'transparent', 'black', 'system'
   Religion _religion = Religion.evangelical;
   BibleVersion _bibleVersion = BibleVersion.acf;
   List<BibleBook> _books = [];
@@ -16,17 +18,20 @@ class AppProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _bookmarks = [];
   ReadingPlan? _activePlan;
   int _readingFontSize = 18;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   Map<String, dynamic>? _dailyVerse;
   int _dailyStreak = 0;
   DateTime? _lastReadDate;
   String _userName = '';
+  String _profileImagePath = '';
 
   // Getters
   bool get isDarkMode => _isDarkMode;
+  String get iconColorMode => _iconColorMode;
   Religion get religion => _religion;
   BibleVersion get bibleVersion => _bibleVersion;
   String get userName => _userName;
+  String get profileImagePath => _profileImagePath;
   List<BibleBook> get books => _books;
   List<BibleBook> get oldTestamentBooks =>
       _books.where((b) => b.testament == Testament.old).toList();
@@ -63,9 +68,11 @@ class AppProvider extends ChangeNotifier {
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     _isDarkMode = prefs.getBool('isDarkMode') ?? true;
+    _iconColorMode = prefs.getString('iconColorMode') ?? 'system';
     _readingFontSize = prefs.getInt('readingFontSize') ?? 18;
     _dailyStreak = prefs.getInt('dailyStreak') ?? 0;
     _userName = prefs.getString('userName') ?? '';
+    _profileImagePath = prefs.getString('profileImagePath') ?? '';
 
     final religionIndex = prefs.getInt('religion') ?? 1;
     _religion = Religion.values[religionIndex.clamp(0, Religion.values.length - 1)];
@@ -100,6 +107,12 @@ class AppProvider extends ChangeNotifier {
       _highlights = List<Map<String, dynamic>>.from(json.decode(hlJson));
     }
 
+    // Load bookmarks
+    final bmJson = prefs.getString('bookmarks');
+    if (bmJson != null) {
+      _bookmarks = List<Map<String, dynamic>>.from(json.decode(bmJson));
+    }
+
     // Load active reading plan
     final planJson = prefs.getString('active_plan');
     if (planJson != null) {
@@ -123,6 +136,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> _saveToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', _isDarkMode);
+    await prefs.setString('iconColorMode', _iconColorMode);
     await prefs.setInt('readingFontSize', _readingFontSize);
     await prefs.setInt('dailyStreak', _dailyStreak);
     await prefs.setInt('religion', _religion.index);
@@ -149,6 +163,7 @@ class AppProvider extends ChangeNotifier {
 
     await prefs.setString('notes', json.encode(_notes.map((n) => n.toJson()).toList()));
     await prefs.setString('highlights', json.encode(_highlights));
+    await prefs.setString('bookmarks', json.encode(_bookmarks));
   }
 
   Future<void> setUserName(String name) async {
@@ -158,8 +173,21 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setProfileImage(String path) async {
+    _profileImagePath = path;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profileImagePath', path);
+    notifyListeners();
+  }
+
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
+    _saveToPrefs();
+    notifyListeners();
+  }
+
+  void setIconColorMode(String mode) {
+    _iconColorMode = mode;
     _saveToPrefs();
     notifyListeners();
   }

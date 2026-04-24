@@ -20,6 +20,10 @@ void main() async {
   // Inicializa notificações
   await NotificationService.init();
 
+  // Reagenda notificações caso tenham sido canceladas pelo sistema
+  // (reinício do celular, limpeza de memória, otimização de bateria)
+  await NotificationService.checkAndReschedule();
+
   // Verifica se é primeiro uso
   final prefs = await SharedPreferences.getInstance();
   final isFirstTime = prefs.getBool('onboardingComplete') != true;
@@ -34,7 +38,7 @@ void main() async {
 
 class PalavraVivaApp extends StatelessWidget {
   final bool isFirstTime;
-  const PalavraVivaApp({Key? key, required this.isFirstTime}) : super(key: key);
+  const PalavraVivaApp({super.key, required this.isFirstTime});
 
   @override
   Widget build(BuildContext context) {

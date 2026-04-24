@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 import 'chapters_screen.dart';
 
 class BooksScreen extends StatefulWidget {
-  const BooksScreen({Key? key}) : super(key: key);
+  const BooksScreen({super.key});
 
   @override
   State<BooksScreen> createState() => _BooksScreenState();

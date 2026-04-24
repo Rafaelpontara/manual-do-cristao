@@ -21,7 +21,7 @@ class ReadingPlanService {
     {'id': 'ed',  'name': 'Esdras',        'chapters': 10},
     {'id': 'ne',  'name': 'Neemias',       'chapters': 13},
     {'id': 'et',  'name': 'Ester',         'chapters': 10},
-    {'id': 'jó',  'name': 'Jó',            'chapters': 42},
+    {'id': 'jo',  'name': 'Jó',             'chapters': 42},
     {'id': 'sl',  'name': 'Salmos',        'chapters': 150},
     {'id': 'pv',  'name': 'Provérbios',    'chapters': 31},
     {'id': 'ec',  'name': 'Eclesiastes',   'chapters': 12},

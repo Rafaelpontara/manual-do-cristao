@@ -14,7 +14,7 @@ import '../theme/app_theme.dart';
 class ChapterReaderScreen extends StatefulWidget {
   final BibleBook book;
   final int chapter;
-  const ChapterReaderScreen({Key? key, required this.book, required this.chapter}) : super(key: key);
+  const ChapterReaderScreen({super.key, required this.book, required this.chapter});
   @override
   State<ChapterReaderScreen> createState() => _ChapterReaderScreenState();
 }

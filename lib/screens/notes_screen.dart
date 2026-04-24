@@ -7,7 +7,7 @@ import '../models/bible_models.dart';
 import '../theme/app_theme.dart';
 
 class NotesScreen extends StatefulWidget {
-  const NotesScreen({Key? key}) : super(key: key);
+  const NotesScreen({super.key});
 
   @override
   State<NotesScreen> createState() => _NotesScreenState();
@@ -283,8 +283,7 @@ class NoteEditorScreen extends StatefulWidget {
   final Note? note;
   final bool isDark;
 
-  const NoteEditorScreen({Key? key, this.note, required this.isDark})
-      : super(key: key);
+  const NoteEditorScreen({super.key, this.note, required this.isDark});
 
   @override
   State<NoteEditorScreen> createState() => _NoteEditorScreenState();

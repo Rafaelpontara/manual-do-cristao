@@ -1,12 +1,81 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/bible_models.dart';
 import '../theme/app_theme.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _picker = ImagePicker();
+
+  Future<void> _pickImage(AppProvider provider) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.navyMid,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 40, height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(color: AppTheme.warmGray, borderRadius: BorderRadius.circular(2))),
+          Text('Foto de Perfil', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 20),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: AppTheme.goldPrimary.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.photo_library_rounded, color: AppTheme.goldPrimary),
+            ),
+            title: const Text('Escolher da Galeria'),
+            onTap: () async {
+              Navigator.pop(ctx);
+              final picked = await _picker.pickImage(
+                  source: ImageSource.gallery, imageQuality: 80, maxWidth: 512);
+              if (picked != null) provider.setProfileImage(picked.path);
+            },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.blue.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.camera_alt_rounded, color: Colors.blue),
+            ),
+            title: const Text('Tirar Foto'),
+            onTap: () async {
+              Navigator.pop(ctx);
+              final picked = await _picker.pickImage(
+                  source: ImageSource.camera, imageQuality: 80, maxWidth: 512);
+              if (picked != null) provider.setProfileImage(picked.path);
+            },
+          ),
+          if (provider.profileImagePath.isNotEmpty)
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.red.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.delete_rounded, color: Colors.red),
+              ),
+              title: const Text('Remover Foto', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(ctx);
+                provider.setProfileImage('');
+              },
+            ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,25 +107,59 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      gradient: const RadialGradient(
-                        colors: [AppTheme.goldPrimary, AppTheme.goldDark],
+                  GestureDetector(
+                    onTap: () => _pickImage(provider),
+                    child: Stack(children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          gradient: const RadialGradient(
+                            colors: [AppTheme.goldPrimary, AppTheme.goldDark],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: provider.profileImagePath.isNotEmpty
+                            ? ClipOval(
+                                child: Image.file(
+                                  File(provider.profileImagePath),
+                                  width: 72, height: 72,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.person_rounded,
+                                      color: AppTheme.navyDeep, size: 36),
+                                ),
+                              )
+                            : const Icon(Icons.person_rounded,
+                                color: AppTheme.navyDeep, size: 36),
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.person_rounded,
-                        color: AppTheme.navyDeep, size: 32),
+                      // Botão de câmera sobre o avatar
+                      Positioned(
+                        bottom: 0, right: 0,
+                        child: Container(
+                          width: 24, height: 24,
+                          decoration: BoxDecoration(
+                            color: AppTheme.goldPrimary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppTheme.navyMid, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded,
+                              color: AppTheme.navyDeep, size: 12),
+                        ),
+                      ),
+                    ]),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Minha Conta',
-                            style: Theme.of(context).textTheme.headlineMedium),
+                        Text(
+                          provider.userName.isNotEmpty
+                              ? provider.userName
+                              : 'Minha Conta',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           '${provider.religion.displayName} · ${provider.bibleVersion.shortName}',
@@ -184,15 +287,6 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
             _buildSectionTitle(context, '♿ Acessibilidade'),
-            _buildClickableSettingItem(
-              context,
-              isDark: isDark,
-              icon: Icons.mic_rounded,
-              iconColor: Colors.blue,
-              title: 'Busca por Voz',
-              subtitle: 'Fale para buscar versículos ou livros',
-              onTap: () => _showVoiceSearch(context),
-            ),
             _buildClickableSettingItem(
               context,
               isDark: isDark,
@@ -468,71 +562,6 @@ class ProfileScreen extends StatelessWidget {
             child: const Text('Ativar'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showVoiceSearch(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.navyMid,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                    colors: [Colors.blue.withOpacity(0.3), Colors.transparent]),
-                shape: BoxShape.circle,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.blue.withOpacity(0.4), blurRadius: 20)
-                  ],
-                ),
-                child: const Icon(Icons.mic_rounded,
-                    color: Colors.white, size: 40),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text('Busca por Voz',
-                style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Fale o nome de um livro, versículo ou passagem bíblica',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('🎤 Microfone ativado — fale agora!')),
-                );
-              },
-              icon: const Icon(Icons.mic_rounded),
-              label: const Text('Começar a Falar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
       ),
     );
   }

@@ -155,6 +155,44 @@ class _ReadScreenState extends State<ReadScreen>
                       ),
                     ),
                   )),
+
+              // ── Leitura Livre ──────────────────────────────────────────────
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 4),
+                child: OutlinedButton(
+                  onPressed: () {
+                    _tabController.animateTo(1); // Vai para aba Cronológica
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.goldPrimary,
+                    side: BorderSide(
+                      color: AppTheme.goldPrimary.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Text('📖 Leitura Livre',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: AppTheme.goldPrimary)),
+                      const Spacer(),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Sem compromisso de prazo',
+                              style: Theme.of(context).textTheme.bodySmall),
+                          const Text('Leia no seu ritmo',
+                              style: TextStyle(
+                                  color: AppTheme.goldPrimary, fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -526,7 +564,13 @@ class _ReadScreenState extends State<ReadScreen>
             final isPadre = video.category == 'padre';
             return GestureDetector(
               onTap: () async {
-                final url = Uri.parse('https://www.youtube.com/watch?v=${video.youtubeId}');
+                final Uri url;
+                if (video.youtubeId.startsWith('search:')) {
+                  final query = video.youtubeId.substring(7);
+                  url = Uri.parse('https://www.youtube.com/results?search_query=$query');
+                } else {
+                  url = Uri.parse('https://www.youtube.com/watch?v=${video.youtubeId}');
+                }
                 if (await canLaunchUrl(url)) launchUrl(url, mode: LaunchMode.externalApplication);
               },
               child: Container(
@@ -540,18 +584,62 @@ class _ReadScreenState extends State<ReadScreen>
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                     child: Stack(children: [
+                      // Fundo degradê temático — não depende de URL externa
                       Container(
-                        height: 180, width: double.infinity, color: Colors.black87,
-                        child: Image.network(video.thumbnail, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(color: Colors.black87)),
+                        height: 160,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isPadre
+                                ? [const Color(0xFF4A1080), const Color(0xFF1A0A3E)]
+                                : [const Color(0xFF0D3B6E), const Color(0xFF051A36)],
+                          ),
+                        ),
+                        child: Stack(children: [
+                          // Ícone decorativo de fundo
+                          Positioned(
+                            right: -10, top: -10,
+                            child: Icon(
+                              isPadre ? Icons.church_rounded : Icons.menu_book_rounded,
+                              size: 120,
+                              color: Colors.white.withOpacity(0.05),
+                            ),
+                          ),
+                          // Conteúdo central
+                          Center(
+                            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.play_arrow_rounded,
+                                    color: Colors.white, size: 36),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.85),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                  Icon(Icons.play_circle_filled_rounded,
+                                      color: Colors.white, size: 14),
+                                  SizedBox(width: 4),
+                                  Text('Abrir no YouTube',
+                                      style: TextStyle(color: Colors.white,
+                                          fontSize: 12, fontWeight: FontWeight.w600)),
+                                ]),
+                              ),
+                            ]),
+                          ),
+                        ]),
                       ),
-                      Container(height: 180, decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [Colors.transparent, Colors.black54],
-                          begin: Alignment.topCenter, end: Alignment.bottomCenter),
-                      )),
-                      const Positioned.fill(child: Center(
-                        child: Icon(Icons.play_circle_filled_rounded, color: Colors.red, size: 56),
-                      )),
+                      // Badge Padre / Pastor
                       Positioned(top: 12, right: 12,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -560,7 +648,8 @@ class _ReadScreenState extends State<ReadScreen>
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(isPadre ? 'Padre' : 'Pastor',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: const TextStyle(color: Colors.white,
+                                fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ]),
